@@ -5,20 +5,23 @@ It is based on @dome272.
 @wandbcode{condition_diffusion}
 """
 
-import argparse, logging, copy
-from types import SimpleNamespace
+import argparse
+import copy
+import logging
+import os
 from contextlib import nullcontext
+from types import SimpleNamespace
 
-import torch
-from torch import optim
-import torch.nn as nn
 import numpy as np
-from fastprogress import progress_bar
-
+import torch
+import torch.nn as nn
 import wandb
-from utils import *
-from modules import UNet_conditional, EMA
+from fastprogress import progress_bar
+from torch import optim
 
+from modules import EMA, UNet_conditional
+from utils import *
+# from utils import get_data, mk_folders, plot_images, set_seed
 
 config = SimpleNamespace(    
     run_name = "DDPM_conditional",
@@ -27,8 +30,8 @@ config = SimpleNamespace(
     seed = 42,
     batch_size = 10,
     img_size = 64,
-    num_classes = 10,
-    dataset_path = get_cifar(img_size=64),
+    num_classes = 2,
+    dataset_path = "/data_b/8behrens/datasets-ordered/",
     train_folder = "train",
     val_folder = "test",
     device = "cuda",
@@ -138,7 +141,7 @@ class Diffusion:
 
         # EMA model sampling
         ema_sampled_images = self.sample(use_ema=True, labels=labels)
-        plot_images(sampled_images)  #to display on jupyter if available
+        # plot_images(sampled_images)  #to display on jupyter if available
         wandb.log({"ema_sampled_images": [wandb.Image(img.permute(1,2,0).squeeze().cpu().numpy()) for img in ema_sampled_images]})
 
     def load(self, model_cpkt_path, model_ckpt="ckpt.pt", ema_model_ckpt="ema_ckpt.pt"):
