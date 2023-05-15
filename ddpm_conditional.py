@@ -59,6 +59,7 @@ class Diffusion:
         self.img_size = img_size
         self.model = UNet_conditional(c_in, c_out, num_classes=num_classes, **kwargs).to(device)
         self.ema_model = copy.deepcopy(self.model).eval().requires_grad_(False)
+        """Model that is trained in parallel to the normal model. It is using EMA to smooth the training process."""
         self.device = device
         self.c_in = c_in
         self.num_classes = num_classes
