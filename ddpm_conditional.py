@@ -25,7 +25,7 @@ from utils import *
 
 config = SimpleNamespace(    
     run_name = "DDPM_conditional",
-    epochs = 1000,
+    epochs = 200,
     noise_steps=1000,
     seed = 42,
     batch_size = 8,
