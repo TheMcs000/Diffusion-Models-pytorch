@@ -71,7 +71,10 @@ class Diffusion:
         return torch.randint(low=1, high=self.noise_steps, size=(n,))
 
     def noise_images(self, x, t):
-        "Add noise to images at instant t"
+        """
+        Add noise to images at instant t.
+        Dhariwal and Nichol - Diffusion Models beat GANs: Appendix B, Equation 17
+        """
         sqrt_alpha_hat = torch.sqrt(self.alpha_hat[t])[:, None, None, None]
         sqrt_one_minus_alpha_hat = torch.sqrt(1 - self.alpha_hat[t])[:, None, None, None]
         Ɛ = torch.randn_like(x)
