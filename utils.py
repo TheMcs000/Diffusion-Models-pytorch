@@ -91,16 +91,16 @@ def save_images(images, path, **kwargs):
 
 def get_data(args):
     train_transforms = torchvision.transforms.Compose([
-        T.Resize(args.img_size + int(.25*args.img_size)),  # args.img_size + 1/4 *args.img_size
-        T.RandomResizedCrop(args.img_size, scale=(0.8, 1.0)),
+        T.Resize((args.img_size, args.img_size)),# + int(.25*args.img_size)),  # args.img_size + 1/4 *args.img_size
+        # T.RandomResizedCrop(args.img_size, scale=(0.8, 1.0)),
         T.ToTensor(),
-        T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        # T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
 
     val_transforms = torchvision.transforms.Compose([
-        T.Resize(args.img_size),
+        T.Resize((args.img_size, args.img_size)),
         T.ToTensor(),
-        T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+        # T.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
     ])
 
     train_dataset = torchvision.datasets.ImageFolder(os.path.join(args.dataset_path, args.train_folder), transform=train_transforms)
