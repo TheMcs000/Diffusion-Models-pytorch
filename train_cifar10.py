@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import wandb
 from ddpm_conditional import Diffusion
-from utils import get_cifar
+# from utils import get_cifar
 
 
 # Trains a conditional diffusion model on CIFAR10
@@ -10,13 +10,13 @@ from utils import get_cifar
 
 config = SimpleNamespace(    
     run_name = "cifar10_ddpm_conditional",
-    epochs = 25,
+    epochs = 500,
     noise_steps=1000,
     seed = 42,
-    batch_size = 128,
+    batch_size = 10,
     img_size = 32,
     num_classes = 10,
-    dataset_path = get_cifar(img_size=32),
+    dataset_path = "/data1/8behrens/cifar/cifar10-64",
     train_folder = "train",
     val_folder = "test",
     device = "cuda",
@@ -29,6 +29,6 @@ config = SimpleNamespace(
 
 diff = Diffusion(noise_steps=config.noise_steps , img_size=config.img_size)
 
-with wandb.init(project="train_sd", group="train", config=config):
+with wandb.init(project="train_cifar", group="train", config=config):
     diff.prepare(config)
     diff.fit(config)

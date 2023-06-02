@@ -6,6 +6,7 @@ It is based on @dome272.
 """
 
 import argparse, logging, copy
+import os
 from types import SimpleNamespace
 from contextlib import nullcontext
 
@@ -28,7 +29,7 @@ config = SimpleNamespace(
     batch_size = 10,
     img_size = 64,
     num_classes = 10,
-    dataset_path = get_cifar(img_size=64),
+    dataset_path = "get_cifar(img_size=64)",
     train_folder = "train",
     val_folder = "test",
     device = "cuda",
@@ -138,7 +139,7 @@ class Diffusion:
 
         # EMA model sampling
         ema_sampled_images = self.sample(use_ema=True, labels=labels)
-        plot_images(sampled_images)  #to display on jupyter if available
+        # plot_images(sampled_images)  #to display on jupyter if available
         wandb.log({"ema_sampled_images": [wandb.Image(img.permute(1,2,0).squeeze().cpu().numpy()) for img in ema_sampled_images]})
 
     def load(self, model_cpkt_path, model_ckpt="ckpt.pt", ema_model_ckpt="ema_ckpt.pt"):
