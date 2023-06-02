@@ -8,4 +8,4 @@ runs/
 alphabet
 *.pt
 data/
-venv/
+.venv/
