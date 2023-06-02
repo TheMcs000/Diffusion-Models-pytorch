@@ -7,5 +7,5 @@ results/
 runs/
 alphabet
 *.pt
-venv/
+.venv/
 data/
