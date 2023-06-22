@@ -26,10 +26,10 @@ config = SimpleNamespace(
     epochs = 100,
     noise_steps=1000,
     seed = 42,
-    batch_size = 10,
+    batch_size = 7,
     img_size = 64,
     num_classes = 10,
-    dataset_path = "get_cifar(img_size=64)",
+    dataset_path = "/srv/8behrens/cifar/cifar10-64",
     train_folder = "train",
     val_folder = "test",
     device = "cuda",
@@ -60,6 +60,15 @@ class Diffusion:
         self.device = device
         self.c_in = c_in
         self.num_classes = num_classes
+    
+    def load_model_from_wandb(self, artifact_path):
+        artifact = wandb.use_artifact(artifact_path)
+        artifact_dir = artifact.download()
+
+        model_path = os.path.join(artifact_dir)
+        self.model.load_state_dict(torch.load(os.path.join(model_path, "ckpt.pt")))
+        self.ema_model.load_state_dict(torch.load(os.path.join(model_path, "ema_ckpt.pt")))
+        self.optimizer.load_state_dict(torch.load(os.path.join(model_path, "optim.pt")))
 
     def prepare_noise_schedule(self):
         return torch.linspace(self.beta_start, self.beta_end, self.noise_steps)
@@ -134,6 +143,21 @@ class Diffusion:
     def log_images(self):
         "Log images to wandb and save them to disk"
         labels = torch.arange(self.num_classes).long().to(self.device)
+
+        # Non-EMA sampling
+        sampled_images = self.sample(use_ema=False, labels=labels)
+        wandb.log({"sampled_images":     [wandb.Image(img.permute(1,2,0).squeeze().cpu().numpy()) for img in sampled_images]})
+
+        # EMA model sampling
+        ema_sampled_images = self.sample(use_ema=True, labels=labels)
+        # plot_images(sampled_images)  #to display on jupyter if available
+        wandb.log({"ema_sampled_images": [wandb.Image(img.permute(1,2,0).squeeze().cpu().numpy()) for img in ema_sampled_images]})
+
+    def generate_cross_images(self):
+        "Log images to wandb and save them to disk"
+        labels = torch.tensor([0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5]).long().to(self.device)
+
+        # Non-EMA sampling
         sampled_images = self.sample(use_ema=False, labels=labels)
         wandb.log({"sampled_images":     [wandb.Image(img.permute(1,2,0).squeeze().cpu().numpy()) for img in sampled_images]})
 
@@ -211,7 +235,13 @@ if __name__ == '__main__':
     ## seed everything
     set_seed(config.seed)
 
-    diffuser = Diffusion(config.noise_steps, img_size=config.img_size, num_classes=config.num_classes)
-    with wandb.init(project="train_sd", group="train", config=config):
+    with wandb.init(project="train_cifar", group="cross-label", config=config):
+        diffuser = Diffusion(config.noise_steps, img_size=config.img_size, num_classes=config.num_classes)
         diffuser.prepare(config)
-        diffuser.fit(config)
+        diffuser.load_model_from_wandb("diffusion-boys/train_cifar/model:v7")  # todo: nochmal mit v1 testen
+        diffuser.generate_cross_images()
+
+    # with wandb.init(project="train_cifar", group="train", config=config):
+    #     diffuser = Diffusion(config.noise_steps, img_size=config.img_size, num_classes=config.num_classes)
+    #     diffuser.prepare(config)
+    #     diffuser.fit(config)
