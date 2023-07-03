@@ -208,6 +208,11 @@ class UNet_conditional(UNet):
         t = self.pos_encoding(t, self.time_dim)
 
         if y is not None:
-            t += self.label_emb(y)
+            if len(y.shape) == 2:  # Then cross-image generation
+                emb = self.label_emb(y)
+                emb_mean = emb.mean(axis=1)
+                t += emb_mean
+            else:  # Normal generation
+                t += self.label_emb(y)
 
         return self.unet_forwad(x, t)

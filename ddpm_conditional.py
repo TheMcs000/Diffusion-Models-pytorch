@@ -19,6 +19,8 @@ from fastprogress import progress_bar
 import wandb
 from utils import *
 from modules import UNet_conditional, EMA
+from torchvision.utils import save_image
+from uuid import uuid4
 
 
 config = SimpleNamespace(    
@@ -153,18 +155,45 @@ class Diffusion:
         # plot_images(sampled_images)  #to display on jupyter if available
         wandb.log({"ema_sampled_images": [wandb.Image(img.permute(1,2,0).squeeze().cpu().numpy()) for img in ema_sampled_images]})
 
-    def generate_cross_images(self):
-        "Log images to wandb and save them to disk"
-        labels = torch.tensor([0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5]).long().to(self.device)
-
-        # Non-EMA sampling
-        sampled_images = self.sample(use_ema=False, labels=labels)
-        wandb.log({"sampled_images":     [wandb.Image(img.permute(1,2,0).squeeze().cpu().numpy()) for img in sampled_images]})
+    def generate_sample_images(self):
+        labels = torch.arange(self.num_classes).long().to(self.device)
+        # # Non-EMA sampling
+        # sampled_images = self.sample(use_ema=False, labels=labels)
+        # wandb.log({"sampled_images":     [wandb.Image(img.permute(1,2,0).squeeze().cpu().numpy()) for img in sampled_images]})
 
         # EMA model sampling
         ema_sampled_images = self.sample(use_ema=True, labels=labels)
+        for i, image in enumerate(ema_sampled_images):
+            save_image(image.float() / 255, f"data/sampled_image/{i}/{uuid4()}.png")
+
+    def generate_cross_images(self):
+        "Log images to wandb and save them to disk"
+        # labels = torch.tensor([0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5]).long().to(self.device)
+        labels = torch.tensor([
+            [1, 9],  # Car, Truck
+            [7, 8],  # Horse, Ship
+            [3, 5],  # cat, dog
+            [0, 2],  # airplane, bird
+            [4, 6],  # deer, frog
+            [8, 9],  # ship, truck
+            [1, 2],  # car, bird
+            [8, 2],  # ship, bird
+            [4, 7],  # deer, horse
+            [9, 6],  # truck, frog
+            [5, 1],  # dog, car
+        ]).long().to(self.device)
+
+
+        # # Non-EMA sampling
+        # sampled_images = self.sample(use_ema=False, labels=labels)
+        # wandb.log({"sampled_images":     [wandb.Image(img.permute(1,2,0).squeeze().cpu().numpy()) for img in sampled_images]})
+
+        # EMA model sampling
+        ema_sampled_images = self.sample(use_ema=True, labels=labels)
+        for i, image in enumerate(ema_sampled_images):
+            save_image(image.float() / 255, f"data/cross_images/{i}/{uuid4()}.png")
         # plot_images(sampled_images)  #to display on jupyter if available
-        wandb.log({"ema_sampled_images": [wandb.Image(img.permute(1,2,0).squeeze().cpu().numpy()) for img in ema_sampled_images]})
+        # wandb.log({"ema_sampled_images": [wandb.Image(img.permute(1,2,0).squeeze().cpu().numpy()) for img in ema_sampled_images]})
 
     def load(self, model_cpkt_path, model_ckpt="ckpt.pt", ema_model_ckpt="ema_ckpt.pt"):
         self.model.load_state_dict(torch.load(os.path.join(model_cpkt_path, model_ckpt)))
@@ -233,13 +262,18 @@ if __name__ == '__main__':
     parse_args(config)
 
     ## seed everything
-    set_seed(config.seed)
+    # set_seed(config.seed)
 
     with wandb.init(project="train_cifar", group="cross-label", config=config):
         diffuser = Diffusion(config.noise_steps, img_size=config.img_size, num_classes=config.num_classes)
         diffuser.prepare(config)
-        diffuser.load_model_from_wandb("diffusion-boys/train_cifar/model:v7")  # todo: nochmal mit v1 testen
-        diffuser.generate_cross_images()
+        diffuser.load_model_from_wandb("diffusion-boys/train_cifar/model:v1")
+        
+        for i in range(2500):
+            diffuser.generate_cross_images()
+
+        # for i in range(2500):
+        #     diffuser.generate_sample_images()
 
     # with wandb.init(project="train_cifar", group="train", config=config):
     #     diffuser = Diffusion(config.noise_steps, img_size=config.img_size, num_classes=config.num_classes)

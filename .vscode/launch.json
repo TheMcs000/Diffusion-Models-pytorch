@@ -1,0 +1,24 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "sample_images",
+            "type": "python",
+            "request": "launch",
+            "program": "sample_images.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "ddpm_conditional",
+            "type": "python",
+            "request": "launch",
+            "program": "ddpm_conditional.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
